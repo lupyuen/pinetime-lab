@@ -68,7 +68,7 @@ Clock::Clock(DisplayApp* app,
   lv_gauge_set_range(gauge1, 0, 59);
 
   /*Set the values*/
-  lv_gauge_set_value(gauge1, 0, value);                                            
+  lv_gauge_set_value(gauge1, 0, minute*36);                                            
                                              
 //analog  
                                              
