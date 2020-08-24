@@ -1696,7 +1696,7 @@ Code[918]:
  - func[637] size=323 <Pinetime::Applications::Screens::BatteryIcon::GetBatteryIcon(float)>
  - func[638] size=113 <Pinetime::Applications::Screens::BatteryIcon::GetPlugIcon(bool)>
  - func[639] size=113 <Pinetime::Applications::Screens::BleIcon::GetIcon(bool)>
- - func[640] size=2333 <Pinetime::Applications::Screens::Clock::Clock(DisplayApp*, Pinetime::Controllers::DateTime&, Pinetime::Controllers::Battery&, Pinetime::Controllers::Ble&)>
+ - func[640] size=2349 <Pinetime::Applications::Screens::Clock::Clock(DisplayApp*, Pinetime::Controllers::DateTime&, Pinetime::Controllers::Battery&, Pinetime::Controllers::Ble&)>
  - func[641] size=137 <event_handler(_lv_obj_t*, unsigned char)>
  - func[642] size=78 <Pinetime::Applications::Screens::DirtyValue<unsigned char>::DirtyValue(unsigned char)>
  - func[643] size=99 <Pinetime::Applications::Screens::DirtyValue<bool>::DirtyValue(bool)>
