@@ -7,7 +7,8 @@
 #include "BatteryIcon.h"
 #include "BleIcon.h"
 #include "Symbols.h"
-//#include "Gauge.h"
+#include "Gauge.h"
+
 using namespace Pinetime::Applications::Screens;
 extern lv_font_t jetbrains_mono_extrabold_compressed;
 extern lv_font_t jetbrains_mono_bold_20;
@@ -17,29 +18,6 @@ static void event_handler(lv_obj_t * obj, lv_event_t event) {
   Clock* screen = static_cast<Clock *>(obj->user_data);
   screen->OnObjectEvent(obj, event);
 }
-
-Clock::Clock(DisplayApp* app,
-        Controllers::DateTime& dateTimeController,
-        Controllers::Battery& batteryController,
-        Controllers::Ble& bleController) : Screen(app), currentDateTime{{}},
-                                           dateTimeController{dateTimeController}, batteryController{batteryController}, bleController{bleController} {
-  displayedChar[0] = 0;
-  displayedChar[1] = 0;
-  displayedChar[2] = 0;
-  displayedChar[3] = 0;
-  displayedChar[4] = 0;                                       
-                                             
-  batteryIcon = lv_label_create(lv_scr_act(), NULL);
-  lv_label_set_text(batteryIcon, Symbols::batteryFull);
-  lv_obj_align(batteryIcon, lv_scr_act(), LV_ALIGN_IN_TOP_RIGHT, -5, 2);
-
-  batteryPlug = lv_label_create(lv_scr_act(), NULL);
-  lv_label_set_text(batteryPlug, Symbols::plug);
-  lv_obj_align(batteryPlug, batteryIcon, LV_ALIGN_OUT_LEFT_MID, -5, 0);
-
-  bleIcon = lv_label_create(lv_scr_act(), NULL);
-  lv_label_set_text(bleIcon, Symbols::bluetooth);
-  lv_obj_align(bleIcon, batteryPlug, LV_ALIGN_OUT_LEFT_MID, -5, 0);
 
 //analog
  
@@ -68,9 +46,32 @@ Clock::Clock(DisplayApp* app,
   lv_gauge_set_range(gauge1, 0, 59);
 
   /*Set the values*/
-  lv_gauge_set_value(gauge1, 0, minute*36);                                            
+  // lv_gauge_set_value(gauge1, 0, minute*36);                                            
                                              
 //analog  
+
+Clock::Clock(DisplayApp* app,
+        Controllers::DateTime& dateTimeController,
+        Controllers::Battery& batteryController,
+        Controllers::Ble& bleController) : Screen(app), currentDateTime{{}},
+                                           dateTimeController{dateTimeController}, batteryController{batteryController}, bleController{bleController} {
+  displayedChar[0] = 0;
+  displayedChar[1] = 0;
+  displayedChar[2] = 0;
+  displayedChar[3] = 0;
+  displayedChar[4] = 0;                                       
+                                             
+  batteryIcon = lv_label_create(lv_scr_act(), NULL);
+  lv_label_set_text(batteryIcon, Symbols::batteryFull);
+  lv_obj_align(batteryIcon, lv_scr_act(), LV_ALIGN_IN_TOP_RIGHT, -5, 2);
+
+  batteryPlug = lv_label_create(lv_scr_act(), NULL);
+  lv_label_set_text(batteryPlug, Symbols::plug);
+  lv_obj_align(batteryPlug, batteryIcon, LV_ALIGN_OUT_LEFT_MID, -5, 0);
+
+  bleIcon = lv_label_create(lv_scr_act(), NULL);
+  lv_label_set_text(bleIcon, Symbols::bluetooth);
+  lv_obj_align(bleIcon, batteryPlug, LV_ALIGN_OUT_LEFT_MID, -5, 0);
                                              
   label_date = lv_label_create(lv_scr_act(), NULL);
   lv_obj_align(label_date, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 40, 80);
@@ -170,6 +171,8 @@ bool Clock::Refresh() {
       lv_label_set_text(label_time, timeStr);
     }
 
+    lv_gauge_set_value(gauge1, 0, minute*36);
+    
     if ((year != currentYear) || (month != currentMonth) || (dayOfWeek != currentDayOfWeek) || (day != currentDay)) {
       char dateStr[22];
       sprintf(dateStr, "%s %d %s %d", DayOfWeekToString(dayOfWeek), day, MonthToString(month), year);
