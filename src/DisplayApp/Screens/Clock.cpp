@@ -33,7 +33,7 @@ static void event_handler(lv_obj_t * obj, lv_event_t event) {
 // style.line.color = LV_COLOR_WHITE;                  /*Line color after the critical value*/
 
   /*Describe the color for the needles*/
-
+  static lv_color_t needle_colors[1];
   needle_colors[0] = LV_COLOR_ORANGE;
 
   /*Create a gauge*/
