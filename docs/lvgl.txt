@@ -1826,7 +1826,7 @@ Code[976]:
  - func[716] size=104 <lv_gauge_set_range(_lv_obj_t*, int, int)>
  - func[717] size=115 <std::__2::chrono::duration<long long, std::__2::ratio<1ll, 1000000000ll> >::zero()>
  - func[718] size=204 <Pinetime::Applications::Screens::Clock::OnObjectEvent(_lv_obj_t*, unsigned char)>
- - func[719] size=5149 <Pinetime::Applications::Screens::Clock::Refresh()>
+ - func[719] size=5158 <Pinetime::Applications::Screens::Clock::Refresh()>
  - func[720] size=51 <Pinetime::Controllers::Battery::PercentRemaining() const>
  - func[721] size=190 <Pinetime::Applications::Screens::DirtyValue<unsigned char>::operator=(unsigned char const&)>
  - func[722] size=66 <Pinetime::Applications::Screens::DirtyValue<unsigned char>::IsUpdated() const>
