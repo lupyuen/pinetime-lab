@@ -19,6 +19,10 @@ static void event_handler(lv_obj_t * obj, lv_event_t event) {
   screen->OnObjectEvent(obj, event);
 }
 
+//analog
+lv_obj_t *gauge1;
+//analog
+
 Clock::Clock(DisplayApp* app,
         Controllers::DateTime& dateTimeController,
         Controllers::Battery& batteryController,
