@@ -513,35 +513,6 @@ function removeFunction(index) {
 
 
 
-var funcWrappers = {};
-
-function getFuncWrapper(func, sig) {
-  if (!func) return; // on null pointer, return undefined
-  assert(sig);
-  if (!funcWrappers[sig]) {
-    funcWrappers[sig] = {};
-  }
-  var sigCache = funcWrappers[sig];
-  if (!sigCache[func]) {
-    // optimize away arguments usage in common cases
-    if (sig.length === 1) {
-      sigCache[func] = function dynCall_wrapper() {
-        return dynCall(sig, func);
-      };
-    } else if (sig.length === 2) {
-      sigCache[func] = function dynCall_wrapper(arg) {
-        return dynCall(sig, func, [arg]);
-      };
-    } else {
-      // general case
-      sigCache[func] = function dynCall_wrapper() {
-        return dynCall(sig, func, Array.prototype.slice.call(arguments));
-      };
-    }
-  }
-  return sigCache[func];
-}
-
 
 
 
@@ -550,20 +521,6 @@ function getFuncWrapper(func, sig) {
 
 function makeBigInt(low, high, unsigned) {
   return unsigned ? ((+((low>>>0)))+((+((high>>>0)))*4294967296.0)) : ((+((low>>>0)))+((+((high|0)))*4294967296.0));
-}
-
-/** @param {Array=} args */
-function dynCall(sig, ptr, args) {
-  if (args && args.length) {
-    // j (64-bit integer) must be passed in as two numbers [low 32, high 32].
-    assert(args.length === sig.substring(1).replace(/j/g, '--').length);
-    assert(('dynCall_' + sig) in Module, 'bad function pointer type - no table for sig \'' + sig + '\'');
-    return Module['dynCall_' + sig].apply(null, [ptr].concat(args));
-  } else {
-    assert(sig.length == 1);
-    assert(('dynCall_' + sig) in Module, 'bad function pointer type - no table for sig \'' + sig + '\'');
-    return Module['dynCall_' + sig].call(null, ptr);
-  }
 }
 
 var tempRet0 = 0;
@@ -667,8 +624,8 @@ var wasmMemory;
 // so this creates a (non-native-wasm) table for us.
 
 var wasmTable = new WebAssembly.Table({
-  'initial': 48,
-  'maximum': 48,
+  'initial': 53,
+  'maximum': 53,
   'element': 'anyfunc'
 });
 
@@ -1247,7 +1204,6 @@ function writeAsciiToMemory(str, buffer, dontAddNull) {
 
 var PAGE_SIZE = 16384;
 var WASM_PAGE_SIZE = 65536;
-var ASMJS_PAGE_SIZE = 16777216;
 
 function alignUp(x, multiple) {
   if (x % multiple > 0) {
@@ -1289,11 +1245,11 @@ function updateGlobalBufferAndViews(buf) {
 }
 
 var STATIC_BASE = 1024,
-    STACK_BASE = 5730848,
+    STACK_BASE = 5731264,
     STACKTOP = STACK_BASE,
-    STACK_MAX = 487968,
-    DYNAMIC_BASE = 5730848,
-    DYNAMICTOP_PTR = 487808;
+    STACK_MAX = 488384,
+    DYNAMIC_BASE = 5731264,
+    DYNAMICTOP_PTR = 488368;
 
 assert(STACK_BASE % 16 === 0, 'stack must start aligned');
 assert(DYNAMIC_BASE % 16 === 0, 'heap must start aligned');
@@ -1393,26 +1349,6 @@ function abortFnPtrError(ptr, sig) {
 
 
 
-function callRuntimeCallbacks(callbacks) {
-  while(callbacks.length > 0) {
-    var callback = callbacks.shift();
-    if (typeof callback == 'function') {
-      callback(Module); // Pass the module as the first argument.
-      continue;
-    }
-    var func = callback.func;
-    if (typeof func === 'number') {
-      if (callback.arg === undefined) {
-        Module['dynCall_v'](func);
-      } else {
-        Module['dynCall_vi'](func, callback.arg);
-      }
-    } else {
-      func(callback.arg === undefined ? null : callback.arg);
-    }
-  }
-}
-
 var __ATPRERUN__  = []; // functions called before the runtime is initialized
 var __ATINIT__    = []; // functions called during startup
 var __ATMAIN__    = []; // functions called when main() is to be run
@@ -1484,29 +1420,6 @@ function addOnExit(cb) {
 
 function addOnPostRun(cb) {
   __ATPOSTRUN__.unshift(cb);
-}
-
-/** @param {number|boolean=} ignore */
-function unSign(value, bits, ignore) {
-  if (value >= 0) {
-    return value;
-  }
-  return bits <= 32 ? 2*Math.abs(1 << (bits-1)) + value // Need some trickery, since if bits == 32, we are right at the limit of the bits JS uses in bitshifts
-                    : Math.pow(2, bits)         + value;
-}
-/** @param {number|boolean=} ignore */
-function reSign(value, bits, ignore) {
-  if (value <= 0) {
-    return value;
-  }
-  var half = bits <= 32 ? Math.abs(1 << (bits-1)) // abs is needed if bits == 32
-                        : Math.pow(2, bits-1);
-  if (value >= half && (bits <= 32 || value > half)) { // for huge values, we can hit the precision limit and always get true here. so don't do that
-                                                       // but, in general there is no perfect solution here. With 64-bit ints, we get rounding and errors
-                                                       // TODO: In i64 mode 1, resign the two parts separately and safely
-    value = -2*half + value; // Cannot bitshift half, as it may be at the limit of the bits JS uses in bitshifts
-  }
-  return value;
 }
 
 
@@ -1874,7 +1787,7 @@ var ASM_CONSTS = {
 
 
 
-// STATICTOP = STATIC_BASE + 486944;
+// STATICTOP = STATIC_BASE + 487360;
 /* global initializers */  __ATINIT__.push({ func: function() { ___wasm_call_ctors() } });
 
 
@@ -1886,6 +1799,26 @@ var ASM_CONSTS = {
 
   function abortStackOverflow(allocSize) {
       abort('Stack overflow! Attempted to allocate ' + allocSize + ' bytes on the stack, but stack has only ' + (STACK_MAX - stackSave() + allocSize) + ' bytes available!');
+    }
+
+  function callRuntimeCallbacks(callbacks) {
+      while(callbacks.length > 0) {
+        var callback = callbacks.shift();
+        if (typeof callback == 'function') {
+          callback(Module); // Pass the module as the first argument.
+          continue;
+        }
+        var func = callback.func;
+        if (typeof func === 'number') {
+          if (callback.arg === undefined) {
+            wasmTable.get(func)();
+          } else {
+            wasmTable.get(func)(callback.arg);
+          }
+        } else {
+          func(callback.arg === undefined ? null : callback.arg);
+        }
+      }
     }
 
   function demangle(func) {
@@ -1903,21 +1836,45 @@ var ASM_CONSTS = {
         });
     }
 
+  
+  function dynCallLegacy(sig, ptr, args) {
+      assert(('dynCall_' + sig) in Module, 'bad function pointer type - no table for sig \'' + sig + '\'');
+      if (args && args.length) {
+        // j (64-bit integer) must be passed in as two numbers [low 32, high 32].
+        assert(args.length === sig.substring(1).replace(/j/g, '--').length);
+      } else {
+        assert(sig.length == 1);
+      }
+      if (args && args.length) {
+        return Module['dynCall_' + sig].apply(null, [ptr].concat(args));
+      }
+      return Module['dynCall_' + sig].call(null, ptr);
+    }function dynCall(sig, ptr, args) {
+      // Without WASM_BIGINT support we cannot directly call function with i64 as
+      // part of thier signature, so we rely the dynCall functions generated by
+      // wasm-emscripten-finalize
+      if (sig.indexOf('j') != -1) {
+        return dynCallLegacy(sig, ptr, args);
+      }
+  
+      return wasmTable.get(ptr).apply(null, args)
+    }
+
   function jsStackTrace() {
-      var err = new Error();
-      if (!err.stack) {
+      var error = new Error();
+      if (!error.stack) {
         // IE10+ special cases: It does have callstack info, but it is only populated if an Error object is thrown,
         // so try that as a special-case.
         try {
           throw new Error();
         } catch(e) {
-          err = e;
+          error = e;
         }
-        if (!err.stack) {
+        if (!error.stack) {
           return '(no stack trace available)';
         }
       }
-      return err.stack.toString();
+      return error.stack.toString();
     }
 
   function stackTrace() {
@@ -1935,7 +1892,7 @@ var ASM_CONSTS = {
     }
 
   function _emscripten_get_sbrk_ptr() {
-      return 487808;
+      return 488368;
     }
 
   function _emscripten_memcpy_big(dest, src, num) {
@@ -2169,7 +2126,6 @@ function intArrayToString(array) {
 }
 
 
-var asmGlobalArg = {};
 var asmLibraryArg = { "__assert_fail": ___assert_fail, "abort": _abort, "emscripten_get_sbrk_ptr": _emscripten_get_sbrk_ptr, "emscripten_memcpy_big": _emscripten_memcpy_big, "emscripten_resize_heap": _emscripten_resize_heap, "fd_write": _fd_write, "memory": wasmMemory, "mktime": _mktime, "setTempRet0": _setTempRet0, "table": wasmTable };
 var asm = createWasm();
 /** @type {function(...*):?} */
@@ -2237,39 +2193,6 @@ var _malloc = Module["_malloc"] = createExportWrapper("malloc");
 
 /** @type {function(...*):?} */
 var _free = Module["_free"] = createExportWrapper("free");
-
-/** @type {function(...*):?} */
-var dynCall_iiii = Module["dynCall_iiii"] = createExportWrapper("dynCall_iiii");
-
-/** @type {function(...*):?} */
-var dynCall_vii = Module["dynCall_vii"] = createExportWrapper("dynCall_vii");
-
-/** @type {function(...*):?} */
-var dynCall_vi = Module["dynCall_vi"] = createExportWrapper("dynCall_vi");
-
-/** @type {function(...*):?} */
-var dynCall_iii = Module["dynCall_iii"] = createExportWrapper("dynCall_iii");
-
-/** @type {function(...*):?} */
-var dynCall_ii = Module["dynCall_ii"] = createExportWrapper("dynCall_ii");
-
-/** @type {function(...*):?} */
-var dynCall_viiii = Module["dynCall_viiii"] = createExportWrapper("dynCall_viiii");
-
-/** @type {function(...*):?} */
-var dynCall_viii = Module["dynCall_viii"] = createExportWrapper("dynCall_viii");
-
-/** @type {function(...*):?} */
-var dynCall_iiiiii = Module["dynCall_iiiiii"] = createExportWrapper("dynCall_iiiiii");
-
-/** @type {function(...*):?} */
-var dynCall_iiiiiii = Module["dynCall_iiiiiii"] = createExportWrapper("dynCall_iiiiiii");
-
-/** @type {function(...*):?} */
-var dynCall_iiiii = Module["dynCall_iiiii"] = createExportWrapper("dynCall_iiiii");
-
-/** @type {function(...*):?} */
-var dynCall_iidiiii = Module["dynCall_iidiiii"] = createExportWrapper("dynCall_iidiiii");
 
 /** @type {function(...*):?} */
 var dynCall_jiji = Module["dynCall_jiji"] = createExportWrapper("dynCall_jiji");
@@ -2357,8 +2280,14 @@ if (!Object.getOwnPropertyDescriptor(Module, "jstoi_s")) Module["jstoi_s"] = fun
 if (!Object.getOwnPropertyDescriptor(Module, "getExecutableName")) Module["getExecutableName"] = function() { abort("'getExecutableName' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "listenOnce")) Module["listenOnce"] = function() { abort("'listenOnce' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "autoResumeAudioContext")) Module["autoResumeAudioContext"] = function() { abort("'autoResumeAudioContext' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
+if (!Object.getOwnPropertyDescriptor(Module, "dynCallLegacy")) Module["dynCallLegacy"] = function() { abort("'dynCallLegacy' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
+if (!Object.getOwnPropertyDescriptor(Module, "getDynCaller")) Module["getDynCaller"] = function() { abort("'getDynCaller' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
+if (!Object.getOwnPropertyDescriptor(Module, "dynCall")) Module["dynCall"] = function() { abort("'dynCall' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
+if (!Object.getOwnPropertyDescriptor(Module, "callRuntimeCallbacks")) Module["callRuntimeCallbacks"] = function() { abort("'callRuntimeCallbacks' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "abortStackOverflow")) Module["abortStackOverflow"] = function() { abort("'abortStackOverflow' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "reallyNegative")) Module["reallyNegative"] = function() { abort("'reallyNegative' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
+if (!Object.getOwnPropertyDescriptor(Module, "unSign")) Module["unSign"] = function() { abort("'unSign' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
+if (!Object.getOwnPropertyDescriptor(Module, "reSign")) Module["reSign"] = function() { abort("'reSign' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "formatString")) Module["formatString"] = function() { abort("'formatString' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "PATH")) Module["PATH"] = function() { abort("'PATH' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "PATH_FS")) Module["PATH_FS"] = function() { abort("'PATH_FS' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
@@ -2389,12 +2318,16 @@ if (!Object.getOwnPropertyDescriptor(Module, "convertI32PairToI53")) Module["con
 if (!Object.getOwnPropertyDescriptor(Module, "convertU32PairToI53")) Module["convertU32PairToI53"] = function() { abort("'convertU32PairToI53' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "exceptionLast")) Module["exceptionLast"] = function() { abort("'exceptionLast' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "exceptionCaught")) Module["exceptionCaught"] = function() { abort("'exceptionCaught' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
+if (!Object.getOwnPropertyDescriptor(Module, "exceptionThrowBuf")) Module["exceptionThrowBuf"] = function() { abort("'exceptionThrowBuf' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "ExceptionInfoAttrs")) Module["ExceptionInfoAttrs"] = function() { abort("'ExceptionInfoAttrs' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "ExceptionInfo")) Module["ExceptionInfo"] = function() { abort("'ExceptionInfo' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "CatchInfo")) Module["CatchInfo"] = function() { abort("'CatchInfo' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "exception_addRef")) Module["exception_addRef"] = function() { abort("'exception_addRef' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "exception_decRef")) Module["exception_decRef"] = function() { abort("'exception_decRef' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "Browser")) Module["Browser"] = function() { abort("'Browser' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
+if (!Object.getOwnPropertyDescriptor(Module, "funcWrappers")) Module["funcWrappers"] = function() { abort("'funcWrappers' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
+if (!Object.getOwnPropertyDescriptor(Module, "getFuncWrapper")) Module["getFuncWrapper"] = function() { abort("'getFuncWrapper' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
+if (!Object.getOwnPropertyDescriptor(Module, "setMainLoop")) Module["setMainLoop"] = function() { abort("'setMainLoop' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "FS")) Module["FS"] = function() { abort("'FS' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "MEMFS")) Module["MEMFS"] = function() { abort("'MEMFS' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "TTY")) Module["TTY"] = function() { abort("'TTY' was not exported. add it to EXTRA_EXPORTED_RUNTIME_METHODS (see the FAQ)") };
