@@ -21,7 +21,7 @@ static void event_handler(lv_obj_t * obj, lv_event_t event) {
 
 //analog
 lv_obj_t *gauge1;
-lv_obj_t * gauge1 = lv_gauge_create(lv_scr_act(), NULL);
+gauge1 = lv_gauge_create(lv_scr_act(), NULL);
 //analog
 
 Clock::Clock(DisplayApp* app,
