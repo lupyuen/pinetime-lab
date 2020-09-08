@@ -177,7 +177,7 @@ bool Clock::Refresh() {
       lv_label_set_text(label_time, timeStr);
     }
 
-    lv_gauge_set_value(gauge1, 0, minute*36);
+    lv_gauge_set_value(gauge1, 0, second*36);
     
     if ((year != currentYear) || (month != currentMonth) || (dayOfWeek != currentDayOfWeek) || (day != currentDay)) {
       char dateStr[22];
