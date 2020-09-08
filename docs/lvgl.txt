@@ -1815,7 +1815,7 @@ Code[976]:
  - func[705] size=328 <Pinetime::Applications::Screens::BatteryIcon::GetBatteryIcon(float)>
  - func[706] size=115 <Pinetime::Applications::Screens::BatteryIcon::GetPlugIcon(bool)>
  - func[707] size=115 <Pinetime::Applications::Screens::BleIcon::GetIcon(bool)>
- - func[708] size=1943 <Pinetime::Applications::Screens::Clock::Clock(DisplayApp*, Pinetime::Controllers::DateTime&, Pinetime::Controllers::Battery&, Pinetime::Controllers::Ble&)>
+ - func[708] size=2003 <Pinetime::Applications::Screens::Clock::Clock(DisplayApp*, Pinetime::Controllers::DateTime&, Pinetime::Controllers::Battery&, Pinetime::Controllers::Ble&)>
  - func[709] size=78 <Pinetime::Applications::Screens::DirtyValue<unsigned char>::DirtyValue(unsigned char)>
  - func[710] size=99 <Pinetime::Applications::Screens::DirtyValue<bool>::DirtyValue(bool)>
  - func[711] size=79 <std::__2::chrono::time_point<std::__2::chrono::system_clock, std::__2::chrono::duration<long long, std::__2::ratio<1ll, 1000000000ll> > >::time_point()>
