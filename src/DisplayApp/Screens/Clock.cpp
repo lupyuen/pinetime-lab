@@ -21,6 +21,7 @@ static void event_handler(lv_obj_t * obj, lv_event_t event) {
 
 //analog
 lv_obj_t *gauge1;
+lv_obj_t * gauge1 = lv_gauge_create(lv_scr_act(), NULL);
 //analog
 
 Clock::Clock(DisplayApp* app,
@@ -81,8 +82,8 @@ Clock::Clock(DisplayApp* app,
   stepIcon = lv_label_create(lv_scr_act(), NULL);
   lv_label_set_text(stepIcon, Symbols::shoe);
   lv_obj_align(stepIcon, stepValue, LV_ALIGN_OUT_LEFT_MID, -5, 0);
-    
-  //analog
+  
+ //analog
  
   /*Create a style*/
 //  lv_style_copy(&style, &lv_style_pretty_color);
@@ -100,7 +101,7 @@ Clock::Clock(DisplayApp* app,
   needle_colors[0] = LV_COLOR_ORANGE;
 
   /*Create a gauge*/
-  lv_obj_t * gauge1 = lv_gauge_create(lv_scr_act(), NULL);
+//  lv_obj_t * gauge1 = lv_gauge_create(lv_scr_act(), NULL);
 //lv_gauge_set_style(gauge1, LV_GAUGE_STYLE_MAIN, &style);
   lv_gauge_set_needle_count(gauge1, 1, needle_colors);
   lv_obj_set_size(gauge1, 180, 180);
@@ -111,8 +112,9 @@ Clock::Clock(DisplayApp* app,
   /*Set the values*/
   // lv_gauge_set_value(gauge1, 0, minute*36);                                            
                                              
-//analog  
-                                                                                        
+//analog 
+                                            
+                                             
 }
 
 Clock::~Clock() {
