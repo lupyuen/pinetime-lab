@@ -106,7 +106,7 @@ Clock::Clock(DisplayApp* app,
   lv_obj_set_size(gauge1, 180, 180);
   lv_obj_align(gauge1, NULL, LV_ALIGN_CENTER, 0, 0);
   lv_gauge_set_scale(gauge1, 360, 60, 0);
-  lv_gauge_set_range(gauge1, 0, 59);
+  lv_gauge_set_range(gauge1, 0, 60);
 
   /*Set the values*/
   // lv_gauge_set_value(gauge1, 0, minute*36);                                            
@@ -177,7 +177,7 @@ bool Clock::Refresh() {
       lv_label_set_text(label_time, timeStr);
     }
 
-    lv_gauge_set_value(gauge1, 0, second*36);
+    lv_gauge_set_value(gauge1, 0, second*6);
     
     if ((year != currentYear) || (month != currentMonth) || (dayOfWeek != currentDayOfWeek) || (day != currentDay)) {
       char dateStr[22];
