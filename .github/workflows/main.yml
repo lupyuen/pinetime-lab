@@ -36,7 +36,7 @@ jobs:
       id:   cache-toolchain
       uses: actions/cache@v2
       env:
-        cache-name: cache-toolchain
+        cache-name: cache-toolchain-9-2020-q2
       with:
         path: ${{ runner.temp }}/arm-none-eabi
         key:  ${{ runner.os }}-build-${{ env.cache-name }}
@@ -47,7 +47,7 @@ jobs:
       uses: fiam/arm-none-eabi-gcc@v1.0.2
       with:
         # GNU Embedded Toolchain for Arm release name, in the V-YYYY-qZ format (e.g. "9-2019-q4")
-        release: 8-2019-q3
+        release: 9-2020-q2
         # Directory to unpack GCC to. Defaults to a temporary directory.
         directory: ${{ runner.temp }}/arm-none-eabi
 
