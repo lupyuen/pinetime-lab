@@ -157,7 +157,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: pinetime-app.out
-        path: build/src/pinetime-app.out
+        path: build/src/pinetime-app*.out
 
     #########################################################################################
     # Finish
